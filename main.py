@@ -36,7 +36,6 @@ PASSWORD = "Riad+@19"
 bot = Bot(token=BOT_TOKEN)
 seen_call_ids = set()
 
-# বিশ্বের ২০০+ দেশের কান্ট্রি কোড এবং ফ্ল্যাগ ডেটাবেজ
 COUNTRY_DATA = {
     "93": {"flag": "🇦🇫", "code": "#AF"}, "358": {"flag": "🇦🇽", "code": "#AX"}, "355": {"flag": "🇦🇱", "code": "#AL"},
     "213": {"flag": "🇩🇿", "code": "#DZ"}, "1684": {"flag": "🇦🇸", "code": "#AS"}, "376": {"flag": "🇦🇩", "code": "#AD"},
@@ -136,19 +135,23 @@ def get_service_name(message):
 
 def login_and_fetch_calls():
     session = requests.Session(impersonate="chrome120")
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        "Referer": "https://www.orangecarrier.com/login",
-        "Origin": "https://www.orangecarrier.com"
-    }
-    login_data = {"email": USERNAME, "password": PASSWORD}
-
     try:
-        session.get(PANEL_LOGIN_URL, headers=headers)
-        response = session.post(PANEL_LOGIN_URL, data=login_data, headers=headers)
+        login_page = session.get(PANEL_LOGIN_URL)
+        soup = BeautifulSoup(login_page.text, 'html.parser')
+        
+        token_input = soup.find('input', {'name': '_token'})
+        token = token_input['value'] if token_input else ""
+
+        login_data = {
+            "_token": token,
+            "email": USERNAME,
+            "password": PASSWORD
+        }
+        
+        response = session.post(PANEL_LOGIN_URL, data=login_data)
         
         if response.status_code == 200 or response.history:
-            calls_response = session.get(PANEL_CALLS_URL, headers=headers)
+            calls_response = session.get(PANEL_CALLS_URL)
             soup = BeautifulSoup(calls_response.text, 'html.parser')
             
             call_list = []
@@ -157,9 +160,8 @@ def login_and_fetch_calls():
                 if len(cols) >= 3:
                     call_id = cols[0].text.strip()
                     number = cols[1].text.strip()
-                    message = cols[2].text.strip() # এখানে মেসেজ বা অডিও লিংক থাকতে পারে
+                    message = cols[2].text.strip()
                     
-                    # যদি অডিও ফাইল বা ডাউনলোড লিংক থাকে তা খোঁজা
                     audio_link = None
                     audio_tag = row.find('audio') or row.find('a', href=re.compile(r'\.(mp3|wav|ogg)', re.I))
                     if audio_tag:
@@ -203,10 +205,8 @@ async def main():
                         f"| 💬 **OTP / Info:** `{message}`"
                     )
                     
-                    # যদি প্যানেলে সরাসরি অডিও ফাইল বা ভয়েস লিংক পাওয়া যায়, তবে তা ম্যাজিক ভয়েস হিসেবে পাঠাবে
                     if audio_link:
                         try:
-                            # যদি লিংকটি রিলেটিভ হয় তবে ডোমেন যুক্ত করতে হবে
                             if audio_link.startswith('/'):
                                 audio_link = "https://www.orangecarrier.com" + audio_link
                             
@@ -217,11 +217,9 @@ async def main():
                                 parse_mode="Markdown"
                             )
                         except Exception as ex:
-                            # ভয়েস পাঠাতে সমস্যা হলে টেক্সট হিসেবে পাঠাবে
                             logging.warning(f"Could not send direct voice, sending text: {ex}")
                             await bot.send_message(chat_id=CHAT_ID, text=caption, parse_mode="Markdown")
                     else:
-                        # অডিও লিংক না থাকলে কল রিসিভ হওয়ার স্ট্যাটাসসহ টেক্সট/ওটিপি পাঠাবে
                         await bot.send_message(chat_id=CHAT_ID, text=caption, parse_mode="Markdown")
                         
         except Exception as e:
