@@ -23,7 +23,6 @@ def run_dummy_server():
 
 threading.Thread(target=run_dummy_server, daemon=True).start()
 
-# কনফিগারেশন এবং ক্রেডেনশিয়ালস
 BOT_TOKEN = "8564093311:AAH55oqI6UmMfXycsEtxtIMjOHNN6atuVoo"
 CHAT_ID = "-1003178872820"
 
@@ -116,23 +115,6 @@ def mask_number(number):
         return clean[:5] + "*****" + clean[-3:]
     return clean
 
-def get_service_name(message):
-    msg_lower = message.lower()
-    if "telegram" in msg_lower or "تلجرام" in msg_lower:
-        return "Telegram"
-    elif "facebook" in msg_lower or "فيسبوك" in msg_lower or "fb" in msg_lower:
-        return "Facebook"
-    elif "imo" in msg_lower:
-        return "IMO"
-    elif "tiktok" in msg_lower:
-        return "TikTok"
-    elif "google" in msg_lower:
-        return "Google"
-    elif "whatsapp" in msg_lower or "واتساب" in msg_lower:
-        return "WhatsApp"
-    else:
-        return "Voice OTP Call"
-
 def login_and_fetch_calls():
     session = requests.Session(impersonate="chrome120")
     try:
@@ -155,33 +137,38 @@ def login_and_fetch_calls():
             soup = BeautifulSoup(calls_response.text, 'html.parser')
             
             call_list = []
+            # Active Calls টেবিলের সারিগুলো ট্র্যাক করা
             for row in soup.find_all('tr'):
                 cols = row.find_all('td')
-                if len(cols) >= 3:
-                    call_id = cols[0].text.strip()
-                    number = cols[1].text.strip()
-                    message = cols[2].text.strip()
+                if len(cols) >= 5:
+                    termination = cols[0].text.strip()
+                    did = cols[1].text.strip()
+                    cli = cols[2].text.strip()
+                    duration = cols[3].text.strip()
+                    
+                    # ইউনিক কল আইডি হিসেবে টার্মিনেশন + সিএলআই ব্যবহার করা হলো
+                    call_id = f"{termination}_{cli}_{duration}"
                     
                     audio_link = None
-                    audio_tag = row.find('audio') or row.find('a', href=re.compile(r'\.(mp3|wav|ogg)', re.I))
+                    audio_tag = row.find('audio') or row.find('a', href=re.compile(r'\.(mp3|wav|ogg)', re.I)) or row.find('a', class_=re.compile(r'play', re.I))
                     if audio_tag:
                         audio_link = audio_tag.get('src') or audio_tag.get('href')
 
                     call_list.append({
                         'id': call_id, 
-                        'number': number, 
-                        'message': message,
+                        'termination': termination,
+                        'did': did,
+                        'cli': cli,
+                        'duration': duration,
                         'audio_link': audio_link
                     })
             return call_list
-        else:
-            logging.error(f"Login failed with status code: {response.status_code}")
     except Exception as e:
         logging.error(f"Error fetching calls: {e}")
     return []
 
 async def main():
-    print("Orange Carrier Audio/Voice Forwarder Bot started...")
+    print("Orange Carrier Audio Bot started successfully...")
 
     while True:
         try:
@@ -190,19 +177,21 @@ async def main():
                 if call['id'] not in seen_call_ids:
                     seen_call_ids.add(call['id'])
                     
-                    number = call['number']
-                    message = call['message']
+                    termination = call['termination']
+                    did = call['did']
+                    cli = call['cli']
+                    duration = call['duration']
                     audio_link = call['audio_link']
                     
-                    country = get_country_info(number)
-                    service = get_service_name(message)
-                    masked_num = mask_number(number)
+                    country = get_country_info(cli)
+                    masked_cli = mask_number(cli)
                     
                     caption = (
-                        f"📞 **Call Received & Ended**\n\n"
-                        f"| {country['flag']} `{masked_num}`\n"
-                        f"| 🔹 **Service:** {service}\n"
-                        f"| 💬 **OTP / Info:** `{message}`"
+                        f"📞 **New Live Call Received!**\n\n"
+                        f"🌍 **Route:** {termination}\n"
+                        f"📞 **DID:** `{did}`\n"
+                        f"📱 **CLI:** {country['flag']} `{masked_cli}`\n"
+                        f"⏱️ **Duration:** `{duration}s`"
                     )
                     
                     if audio_link:
@@ -217,7 +206,7 @@ async def main():
                                 parse_mode="Markdown"
                             )
                         except Exception as ex:
-                            logging.warning(f"Could not send direct voice, sending text: {ex}")
+                            logging.warning(f"Voice send failed, sending text: {ex}")
                             await bot.send_message(chat_id=CHAT_ID, text=caption, parse_mode="Markdown")
                     else:
                         await bot.send_message(chat_id=CHAT_ID, text=caption, parse_mode="Markdown")
@@ -225,7 +214,7 @@ async def main():
         except Exception as e:
             logging.error(f"Loop error: {e}")
             
-        await asyncio.sleep(10)
+        await asyncio.sleep(5)
 
 if __name__ == "__main__":
     asyncio.run(main())
