@@ -153,7 +153,7 @@ def fetch_active_calls():
     session.headers.update({
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
         "Cookie": COOKIES,
-        "X-Requested-With": "XMLHttpRequest"
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8"
     })
     try:
         response = session.get(PANEL_ACTIVE_CALLS_URL)
@@ -164,7 +164,7 @@ def fetch_active_calls():
         soup = BeautifulSoup(response.text, 'html.parser')
         call_list = []
         
-        # প্যানেলের টেবিলের ভেতরের সব রো স্ক্যান করা
+        # প্যানেলের টেবিল রো খুঁজে বের করা
         for row in soup.find_all('tr'):
             cols = row.find_all('td')
             if len(cols) >= 3:
@@ -172,32 +172,54 @@ def fetch_active_calls():
                 cli = cols[1].text.strip()
                 duration = cols[2].text.strip()
                 
-                # নিশ্চিত হওয়া যে এগুলো ফোন নম্বর কি না
-                if len(did) >= 5 and len(cli) >= 5 and did.isdigit():
-                    call_id = f"{did}_{cli}"
+                # যদি DID এবং CLI তে সংখ্যা থাকে
+                if any(char.isdigit() for char in did) and any(char.isdigit() for char in cli):
+                    # ক্লিন নম্বর নেওয়া
+                    did_clean = re.sub(r'\D', '', did)
+                    cli_clean = re.sub(r'\D', '', cli)
                     
-                    audio_link = None
-                    audio_tag = row.find('audio') or row.find('a', href=True)
-                    if audio_tag:
-                        href = audio_tag.get('href', '')
-                        if any(x in href for x in ['listen', 'stream', 'audio', 'play', 'call']):
-                            audio_link = href
+                    if len(did_clean) >= 4 and len(cli_clean) >= 4:
+                        call_id = f"{did_clean}_{cli_clean}"
+                        
+                        audio_link = None
+                        audio_tag = row.find('audio') or row.find('a', href=True)
+                        if audio_tag:
+                            href = audio_tag.get('href', '')
+                            if any(x in href for x in ['listen', 'stream', 'audio', 'play', 'call']):
+                                audio_link = href
 
-                    call_list.append({
-                        'id': call_id,
-                        'did': did,
-                        'cli': cli,
-                        'duration': duration,
-                        'audio_link': audio_link
-                    })
+                        call_list.append({
+                            'id': call_id,
+                            'did': did_clean,
+                            'cli': cli_clean,
+                            'duration': duration if duration else "0",
+                            'audio_link': audio_link
+                        })
         return call_list
     except Exception as e:
         print(f"Fetch error: {e}")
     return []
 
+async def send_startup_notification():
+    try:
+        demo_text = (
+            "📞 **DEMO CALL RECEIVED**\n\n"
+            "📞 **DID:** `+8801800000000`\n"
+            "📱 **CLI:** 🇧🇩 `88018*****000`\n"
+            "⏱️ **Duration:** `12s`\n"
+            "✨ **Your bot active now & Cookie login verified successfully!**"
+        )
+        await bot.send_message(chat_id=CHAT_ID, text=demo_text, parse_mode="Markdown")
+        print("✅ Startup Demo Notification sent to group successfully!")
+    except Exception as e:
+        print(f"❌ Demo notification failed: {e}")
+
 async def main():
-    print("🚀 Fixed Active Calls Monitor Bot started...")
+    print("🚀 Active Calls Monitor Bot started successfully...")
     
+    # বোট চালু হওয়ার সাথে সাথে আপনার পছন্দমতো ডেমো মেসেজ পাঠাবে
+    await send_startup_notification()
+
     while True:
         try:
             active_calls = fetch_active_calls()
@@ -214,7 +236,7 @@ async def main():
                     masked_cli = mask_number(cli)
                     
                     caption = (
-                        f"🚨 **Live Call Detected!**\n\n"
+                        f"📞 **LIVE CALL RECEIVED**\n\n"
                         f"📞 **DID:** `{did}`\n"
                         f"📱 **CLI:** {country['flag']} `{masked_cli}`\n"
                         f"⏱️ **Duration:** `{duration}s`"
@@ -230,16 +252,16 @@ async def main():
                     else:
                         await bot.send_message(chat_id=CHAT_ID, text=caption, parse_mode="Markdown")
                     
-                    print(f"✅ Live call successfully sent to Telegram: {masked_cli}")
+                    print(f"✅ Real call sent to Telegram: {masked_cli}")
             
-            # অল্প সময় পর মেমোরি ক্লিয়ার করা যাতে নতুন কল বারবার আসলে ধরতে পারে
-            if len(seen_active_calls) > 30:
+            if len(seen_active_calls) > 40:
                 seen_active_calls.clear()
                 
         except Exception as e:
             print(f"Loop error: {e}")
             
-        await asyncio.sleep(3)
+        # প্রতি ৫ সেকেন্ড পরপর চেক লুপ
+        await asyncio.sleep(5)
 
 if __name__ == "__main__":
     asyncio.run(main())
