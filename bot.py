@@ -29,8 +29,9 @@ CHAT_ID = "-1003178872820"
 
 PANEL_CALLS_URL = "https://www.orangecarrier.com/live/calls"
 
-# আপনার দেওয়া ফ্রেস কুকি স্ট্রিং
-COOKIES = "Orange_carrier_session=eyJpdiI6IkVBRTdRUXFyVER2N29UTVJzRUZhcEE9PSIsInZhbHVlIjoiSkcwREdcLzUxOTVEQmZQQVhVXC9mcEErK1NMbjZ5Z1FRNHRNSlBFekRRbHhscnFDTUcwODV4dnhJVHNzbEROOGVnOEFtTGc3RllkRUNvTW9ZZ1JEbjJHWUJNdGlOd2UxU1RQSit4dE8xZnBXbHg2b2lValpacHNHNWtsbkNEXC9rNmMiLCJtYWMiOiI3NWVjNjExYWJhZTBhM2RiNWUzZjQ5YzkwOTQ4Y2JlZWNhZjA4OTRmYjk3MDc0MWRmNTU2OThkNzA1ZWRlNjhkIn0%3D;_gat_gtag_UA_191466370_1=1;_fbp=fb.1.1786811898314.919633458798933041;_ga=GA1.2.1783611367.1786811898;_gid=GA1.2.360386769.1786811898;XSRF-TOKEN=eyJpdiI6InNBOHhva1I2V1Bwa1NFaEJnK2FFaHc9PSIsInZhbHVlIjoiZm9qdFJMbEwzeU95Mnc5WEFPNWhITXlZczluXC9JbVNUTFVaRzhMOFQ0amFORVRFdTkwQTJPN05rV0lsMFZIOFwvWTQ2c2o5U251d2RDclFUaDVFUllcL01DWWQrK1I2NFhLWGpvMSt3TjhhV3dVZXE1RUtDcm9MQmJWUnlMOVp5bysiLCJtYWMiOiIyZmVmODAzZTVkMmE1ZWZmMGMwMTA2OWQzYzZiZTE0ODliMjZkYzU5YmNhN2RjYTU4NWYxM2U3MzljY2U1OGNlIn0%3D"
+# আপনার কুকি থেকে সব ধরনের অতিরিক্ত স্পেস ও নতুন লাইন রিমোভ করে এক লাইনে রাখা হলো
+RAW_COOKIE = "Orange_carrier_session=eyJpdiI6IkVBRTdRUXFyVER2N29UTVJzRUZhcEE9PSIsInZhbHVlIjoiSkcwREdcLzUxOTVEQmZQQVhVXC9mcEErK1NMbjZ5Z1FRNHRNSlBFekRRbHhscnFDTUcwODV4dnhJVHNzbEROOGVnOEFtTGc3RllkRUNvTW9ZZ1JEbjJHWUJNdGlOd2UxU1RQSit4dE8xZnBXbHg2b2lValpacHNHNWtsbkNEXC9rNmMiLCJtYWMiOiI3NWVjNjExYWJhZTBhM2RiNWUzZjQ5YzkwOTQ4Y2JlZWNhZjA4OTRmYjk3MDc0MWRmNTU2OThkNzA1ZWRlNjhkIn0%3D;_gat_gtag_UA_191466370_1=1;_fbp=fb.1.1786811898314.919633458798933041;_ga=GA1.2.1783611367.1786811898;_gid=GA1.2.360386769.1786811898;XSRF-TOKEN=eyJpdiI6InNBOHhva1I2V1Bwa1NFaEJnK2FFaHc9PSIsInZhbHVlIjoiZm9qdFJMbEwzeU95Mnc5WEFPNWhITXlZczluXC9JbVNUTFVaRzhMOFQ0amFORVRFdTkwQTJPN05rV0lsMFZIOFwvWTQ2c2o5U251d2RDclFUaDVFUllcL01DWWQrK1I2NFhLWGpvMSt3TjhhV3dVZXE1RUtDcm9MQmJWUnlMOVp5bysiLCJtYWMiOiIyZmVmODAzZTVkMmE1ZWZmMGMwMTA2OWQzYzZiZTE0ODliMjZkYzU5YmNhN2RjYTU4NWYxM2U3MzljY2U1OGNlIn0%3D"
+COOKIES = RAW_COOKIE.replace("\n", "").replace("\r", "").strip()
 
 bot = Bot(token=BOT_TOKEN)
 seen_call_ids = set()
@@ -62,13 +63,11 @@ def fetch_calls_with_cookies():
     try:
         calls_response = session.get(PANEL_CALLS_URL)
         
-        # টার্মাকে স্ট্যাটাস দেখানোর জন্য চেক
         if "login" in calls_response.url or calls_response.status_code != 200:
-            print(f"❌ Cookie Login Failed! Status Code: {calls_response.status_code}")
-            print("⚠️ আপনার কুকি এক্সপায়ার্ড হয়ে গেছে অথবা ভুল আছে। দয়া করে নতুন কুকি দিন।")
+            print(f"❌ Cookie Login Failed! URL: {calls_response.url} | Status Code: {calls_response.status_code}")
             return []
         
-        print("✅ Cookie Login Successful! প্যানেল থেকে লাইভ কল চেক করা হচ্ছে...")
+        print("✅ Cookie Login Successful! প্যানেل থেকে লাইভ কল চেক করা হচ্ছে...")
         soup = BeautifulSoup(calls_response.text, 'html.parser')
         
         call_list = []
@@ -107,23 +106,16 @@ async def send_demo_call_notification():
             f"⏱️ **Duration:** `12s`\n"
             f"✨ *Your bot active now & Cookie login verified successfully!*"
         )
-        # একটি স্যাম্পল ওয়ার্কিং অডিও লিংক দিয়ে ডেমো কল ভয়েস পাঠানো হচ্ছে
-        demo_audio = "https://www.signal.org/assets/faq/audio/sample.mp3"
         
-        await bot.send_voice(
-            chat_id=CHAT_ID, 
-            voice=demo_audio, 
-            caption=demo_caption, 
-            parse_mode="Markdown"
-        )
-        print("✅ Demo call received notification & voice sent to group successfully!")
+        # ভয়েস ফেইল করলে যাতে টেক্সট মেসেজ হিসেবে সেফলি চলে যায়
+        await bot.send_message(chat_id=CHAT_ID, text=demo_caption, parse_mode="Markdown")
+        print("✅ Demo call notification sent to group successfully!")
     except Exception as e:
         print(f"❌ Demo call send failed: {e}")
 
 async def main():
     print("Orange Carrier Audio Bot (Cookie Auth) started successfully...")
     
-    # বোট চালু হওয়ার সাথে সাথে গ্রুপে ডেমো কল নোটিফিকেশন পাঠাবে
     await send_demo_call_notification()
 
     while True:
