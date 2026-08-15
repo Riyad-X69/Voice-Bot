@@ -29,6 +29,7 @@ BOT_TOKEN = "8564093311:AAE1wtnRDybV4oOH3HgmJbHplsBovYVtZm8"
 CHAT_ID = "-1003178872820"
 
 PANEL_ACTIVE_CALLS_URL = "https://www.orangecarrier.com/live/calls"
+DASHBOARD_URL = "https://www.orangecarrier.com/dashboard"
 
 # আপনার কুকি ডাটা
 COOKIE_JSON = [
@@ -148,58 +149,71 @@ def mask_number(number):
         return clean[:5] + "*****" + clean[-3:]
     return clean
 
+def test_cookie_validity():
+    session = requests.Session()
+    session.headers.update({
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+        "Cookie": COOKIES
+    })
+    try:
+        response = session.get(DASHBOARD_URL, allow_redirects=True)
+        print(f"🔍 Cookie Test URL Response: {response.url} (Status: {response.status_code})")
+        if "login" in response.url or response.status_code != 200:
+            print("❌ COOKIE STATUS: INVALID or EXPIRED! (Redirected to login page)")
+            return False
+        else:
+            print("✅ COOKIE STATUS: ACTIVE & VALID! Successfully logged into Panel.")
+            return True
+    except Exception as e:
+        print(f"⚠️ Cookie check error: {e}")
+        return False
+
 def fetch_active_calls():
     session = requests.Session()
     session.headers.update({
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
         "Cookie": COOKIES,
-        "X-Requested-With": "XMLHttpRequest"
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8"
     })
     try:
         response = session.get(PANEL_ACTIVE_CALLS_URL)
         if "login" in response.url or response.status_code != 200:
-            print(f"❌ Cookie Login Failed! URL: {response.url}")
+            print("❌ Session expired! Please update cookies.")
             return []
         
         soup = BeautifulSoup(response.text, 'html.parser')
         call_list = []
         
-        # টেবিলের প্রতিটি রো স্ক্যান করা
         for row in soup.find_all('tr'):
-            cols = row.find_all('td')
-            if len(cols) >= 3:
-                did = cols[0].text.strip()
-                cli = cols[1].text.strip()
-                duration = cols[2].text.strip()
+            text_content = row.get_text(" ", strip=True)
+            numbers = re.findall(r'(\+?\d{8,15})', text_content)
+            if len(numbers) >= 2:
+                did = numbers[0]
+                cli = numbers[1]
                 
-                # নম্বর ফিল্টার করা
-                if any(char.isdigit() for char in did) and any(char.isdigit() for char in cli):
-                    did_clean = re.sub(r'\D', '', did)
-                    cli_clean = re.sub(r'\D', '', cli)
+                dur_match = re.search(r'\b(\d{1,3})\b', text_content)
+                duration = dur_match.group(1) if dur_match else "0"
+                
+                did_clean = re.sub(r'\D', '', did)
+                cli_clean = re.sub(r'\D', '', cli)
+                
+                if len(did_clean) >= 4 and len(cli_clean) >= 4:
+                    call_id = f"{did_clean}_{cli_clean}"
                     
-                    if len(did_clean) >= 4 and len(cli_clean) >= 4:
-                        call_id = f"{did_clean}_{cli_clean}"
-                        
-                        # প্লে বাটন বা অডিও সোর্স ট্যাগ খোঁজা
-                        audio_link = None
-                        
-                        # প্রথমে ট্যাগগুলোর ভেতরের onclick বা href চেক করা
-                        for el in row.find_all(['a', 'button', 'div', 'audio']):
-                            # onclick বা অন্য এট্রিবিউটে লিংক বা আইডি আছে কি না দেখা
-                            full_str = str(el)
-                            match = re.search(r'(https?://[^\s<>"]+|/[^\s<>"]+\.(mp3|wav|ogg|php)[^\s<>"]*)', full_str, re.I)
-                            if match:
-                                audio_link = match.group(1)
-                                break
-                        
-                        # যদি সরাসরি লিংক না পাওয়া যায়, তবে প্লে বাটন সম্বলিত রো থেকে আইডি বের করে অডিও লিংকের স্ট্রাকচার তৈরি করা
-                        call_list.append({
-                            'id': call_id,
-                            'did': did_clean,
-                            'cli': cli_clean,
-                            'duration': duration if duration else "0",
-                            'audio_link': audio_link
-                        })
+                    audio_link = None
+                    for a_tag in row.find_all('a', href=True):
+                        href = a_tag['href']
+                        if any(x in href.lower() for x in ['play', 'listen', 'audio', 'stream', 'call']):
+                            audio_link = href
+                            break
+                    
+                    call_list.append({
+                        'id': call_id,
+                        'did': did_clean,
+                        'cli': cli_clean,
+                        'duration': duration,
+                        'audio_link': audio_link
+                    })
         return call_list
     except Exception as e:
         print(f"Fetch error: {e}")
@@ -211,7 +225,7 @@ async def send_startup_notification():
             "📞 **DEMO CALL RECEIVED**\n\n"
             "📞 **DID:** `+5491171180334`\n"
             "📱 **CLI:** 🇦🇷 `+15627*****219`\n"
-            "⏱️ **Duration:** `17s`\n"
+            "⏱️ **Duration:** `18s`\n"
             "✨ **Your bot active now & Cookie login verified successfully!**"
         )
         await bot.send_message(chat_id=CHAT_ID, text=demo_text, parse_mode="Markdown")
@@ -221,6 +235,10 @@ async def send_startup_notification():
 
 async def main():
     print("🚀 Active Calls Monitor Bot started successfully...")
+    
+    # কোড চালু হওয়ার সাথে সাথেই কুকি চেক করবে
+    test_cookie_validity()
+    
     await send_startup_notification()
 
     while True:
@@ -257,7 +275,7 @@ async def main():
                     
                     print(f"✅ Real call sent to Telegram: {masked_cli}")
             
-            if len(seen_active_calls) > 40:
+            if len(seen_active_calls) > 50:
                 seen_active_calls.clear()
                 
         except Exception as e:
