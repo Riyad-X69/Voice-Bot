@@ -23,14 +23,15 @@ def run_dummy_server():
 
 threading.Thread(target=run_dummy_server, daemon=True).start()
 
-BOT_TOKEN = "8564093311:AAH55oqI6UmMfXycsEtxtIMjOHNN6atuVoo"
+# নতুন আপডেট করা ক্রেডেনশিয়ালস
+BOT_TOKEN = "8564093311:AAE1wtnRDybV4oOH3HgmJbHplsBovYVtZm8"
 CHAT_ID = "-1003178872820"
 
 PANEL_LOGIN_URL = "https://www.orangecarrier.com/login"
 PANEL_CALLS_URL = "https://www.orangecarrier.com/live/calls"
 
-USERNAME = "gmaixcom116@gmail.com"
-PASSWORD = "Riad+@19"
+USERNAME = "Shorfuddin904@gmail.com"
+PASSWORD = "3526167852"
 
 bot = Bot(token=BOT_TOKEN)
 seen_call_ids = set()
@@ -137,7 +138,6 @@ def login_and_fetch_calls():
             soup = BeautifulSoup(calls_response.text, 'html.parser')
             
             call_list = []
-            # Active Calls টেবিলের সারিগুলো ট্র্যাক করা
             for row in soup.find_all('tr'):
                 cols = row.find_all('td')
                 if len(cols) >= 5:
@@ -146,7 +146,6 @@ def login_and_fetch_calls():
                     cli = cols[2].text.strip()
                     duration = cols[3].text.strip()
                     
-                    # ইউনিক কল আইডি হিসেবে টার্মিনেশন + সিএলআই ব্যবহার করা হলো
                     call_id = f"{termination}_{cli}_{duration}"
                     
                     audio_link = None
@@ -202,7 +201,7 @@ async def main():
                             await bot.send_voice(
                                 chat_id=CHAT_ID, 
                                 voice=audio_link, 
-                                caption=caption, 
+,                                caption=caption, 
                                 parse_mode="Markdown"
                             )
                         except Exception as ex:
