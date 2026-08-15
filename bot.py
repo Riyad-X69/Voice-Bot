@@ -1,6 +1,5 @@
 import os
 import re
-import time
 import asyncio
 import logging
 import threading
@@ -28,11 +27,10 @@ threading.Thread(target=run_dummy_server, daemon=True).start()
 BOT_TOKEN = "8564093311:AAE1wtnRDybV4oOH3HgmJbHplsBovYVtZm8"
 CHAT_ID = "-1003178872820"
 
-PANEL_LOGIN_URL = "https://www.orangecarrier.com/login"
 PANEL_CALLS_URL = "https://www.orangecarrier.com/live/calls"
 
-USERNAME = "gmaixcom116@gmail.com"
-PASSWORD = "Riad+@19"
+# আপনার দেওয়া ফ্রেস কুকি স্ট্রিং
+COOKIES = "Orange_carrier_session=eyJpdiI6IkVBRTdRUXFyVER2N29UTVJzRUZhcEE9PSIsInZhbHVlIjoiSkcwREdcLzUxOTVEQmZQQVhVXC9mcEErK1NMbjZ5Z1FRNHRNSlBFekRRbHhscnFDTUcwODV4dnhJVHNzbEROOGVnOEFtTGc3RllkRUNvTW9ZZ1JEbjJHWUJNdGlOd2UxU1RQSit4dE8xZnBXbHg2b2lValpacHNHNWtsbkNEXC9rNmMiLCJtYWMiOiI3NWVjNjExYWJhZTBhM2RiNWUzZjQ5YzkwOTQ4Y2JlZWNhZjA4OTRmYjk3MDc0MWRmNTU2OThkNzA1ZWRlNjhkIn0%3D;_gat_gtag_UA_191466370_1=1;_fbp=fb.1.1786811898314.919633458798933041;_ga=GA1.2.1783611367.1786811898;_gid=GA1.2.360386769.1786811898;XSRF-TOKEN=eyJpdiI6InNBOHhva1I2V1Bwa1NFaEJnK2FFaHc9PSIsInZhbHVlIjoiZm9qdFJMbEwzeU95Mnc5WEFPNWhITXlZczluXC9JbVNUTFVaRzhMOFQ0amFORVRFdTkwQTJPN05rV0lsMFZIOFwvWTQ2c2o5U251d2RDclFUaDVFUllcL01DWWQrK1I2NFhLWGpvMSt3TjhhV3dVZXE1RUtDcm9MQmJWUnlMOVp5bysiLCJtYWMiOiIyZmVmODAzZTVkMmE1ZWZmMGMwMTA2OWQzYzZiZTE0ODliMjZkYzU5YmNhN2RjYTU4NWYxM2U3MzljY2U1OGNlIn0%3D"
 
 bot = Bot(token=BOT_TOKEN)
 seen_call_ids = set()
@@ -55,35 +53,22 @@ def mask_number(number):
         return clean[:5] + "*****" + clean[-3:]
     return clean
 
-def login_and_fetch_calls():
+def fetch_calls_with_cookies():
     session = requests.Session()
     session.headers.update({
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
-        "Accept-Language": "en-US,en;q=0.9"
+        "Cookie": COOKIES
     })
     try:
-        login_page = session.get(PANEL_LOGIN_URL)
-        soup = BeautifulSoup(login_page.text, 'html.parser')
+        calls_response = session.get(PANEL_CALLS_URL)
         
-        token_input = soup.find('input', {'name': '_token'})
-        token = token_input['value'] if token_input else ""
-
-        login_data = {
-            "_token": token,
-            "email": USERNAME,
-            "password": PASSWORD
-        }
-        
-        response = session.post(PANEL_LOGIN_URL, data=login_data, allow_redirects=True)
-        time.sleep(3)
-        
-        if "login" in response.url or "Invalid" in response.text or (response.status_code != 200 and not response.history):
-            print(f"❌ Login Failed! URL: {response.url} | Status Code: {response.status_code}")
+        # টার্মাকে স্ট্যাটাস দেখানোর জন্য চেক
+        if "login" in calls_response.url or calls_response.status_code != 200:
+            print(f"❌ Cookie Login Failed! Status Code: {calls_response.status_code}")
+            print("⚠️ আপনার কুকি এক্সপায়ার্ড হয়ে গেছে অথবা ভুল আছে। দয়া করে নতুন কুকি দিন।")
             return []
         
-        print("✅ Login Successful! Checking calls...")
-        calls_response = session.get(PANEL_CALLS_URL)
+        print("✅ Cookie Login Successful! প্যানেল থেকে লাইভ কল চেক করা হচ্ছে...")
         soup = BeautifulSoup(calls_response.text, 'html.parser')
         
         call_list = []
@@ -113,22 +98,37 @@ def login_and_fetch_calls():
         logging.error(f"Error fetching calls: {e}")
     return []
 
-async def send_startup_message():
+async def send_demo_call_notification():
     try:
-        await bot.send_message(chat_id=CHAT_ID, text="Your bot active now", parse_mode="Markdown")
-        print("✅ 'Your bot active now' message sent to group successfully!")
+        demo_caption = (
+            f"📞 **[DEMO CALL RECEIVED]**\n\n"
+            f"📞 **DID:** `+8801800000000`\n"
+            f"📱 **CLI:** 🇧🇩 `88018*****000`\n"
+            f"⏱️ **Duration:** `12s`\n"
+            f"✨ *Your bot active now & Cookie login verified successfully!*"
+        )
+        # একটি স্যাম্পল ওয়ার্কিং অডিও লিংক দিয়ে ডেমো কল ভয়েস পাঠানো হচ্ছে
+        demo_audio = "https://www.signal.org/assets/faq/audio/sample.mp3"
+        
+        await bot.send_voice(
+            chat_id=CHAT_ID, 
+            voice=demo_audio, 
+            caption=demo_caption, 
+            parse_mode="Markdown"
+        )
+        print("✅ Demo call received notification & voice sent to group successfully!")
     except Exception as e:
-        print(f"❌ Startup message send failed: {e}")
+        print(f"❌ Demo call send failed: {e}")
 
 async def main():
-    print("Orange Carrier Audio Bot started successfully...")
+    print("Orange Carrier Audio Bot (Cookie Auth) started successfully...")
     
-    # বোট চালু হওয়ার সাথে সাথে গ্রুপে মেসেজ পাঠাবে
-    await send_startup_message()
+    # বোট চালু হওয়ার সাথে সাথে গ্রুপে ডেমো কল নোটিফিকেশন পাঠাবে
+    await send_demo_call_notification()
 
     while True:
         try:
-            calls_data = login_and_fetch_calls()
+            calls_data = fetch_calls_with_cookies()
             for call in calls_data:
                 if call['id'] not in seen_call_ids:
                     seen_call_ids.add(call['id'])
