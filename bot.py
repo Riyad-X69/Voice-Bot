@@ -31,11 +31,11 @@ CHAT_ID = "-1003178872820"
 PANEL_ACTIVE_CALLS_URL = "https://www.orangecarrier.com/live/calls"
 DASHBOARD_URL = "https://www.orangecarrier.com/dashboard"
 
-# আপনার কুকি ডাটা
+# আপনার নতুন কুকি ডাটা
 COOKIE_JSON = [
     {
         "name": "orange_carrier_session",
-        "value": "eyJpdiI6Ildybk9qdWYyV1BRWnNHdWcwNVpzdEE9PSIsInZhbHVlIjoiNFR3WllhMUprXC93OUxWOXRUQ0lJelwvbjQrQ05oUnFTNVBadThQeFwvSlpZOWRtY1JibjFwRlNZQ2w0STNUbVwvcmIwOFFXaTdXTmVKNitCU1VTQXlKTnVPMXo4emFYZjVXQkZFaXhkczNqUU81T3JHbWJJSTljMW5jSVR5Vlk2aVVTIiwibWFjIjoiNDM2ZTAwZjFhNGViZjg5ZDVhY2EwMTllZjUwOGE4MDUzMGVlMGVmYTdkNTE0MDE1Nzg1MTEyMGQ1YTZhZjMyMiJ9",
+        "value": "eyJpdiI6IlwvalU1UU1GbTVMM0FxK0g0dk1QR2pBPT0iLCJ2YWx1ZSI6InZpR0RJZFZBNmdxUGdZQlhsN0FBTUZGVFNMM0ZYVE1wUkhSNEhxQWJVVUdkbUpSMlcwRUxQU2xISlNyS0lCQVQ3UmVla0FVOStKQVNiZ2JqTjVhdlVcLzFTXC8rWXh2Y2hTRGNOR3VCVUdjZ3YxcVB2dGJ3WWNpcjZBZXQ3S1ZUTHQiLCJtYWMiOiJhNzQ5M2U4MTUwOWMwMTA1MWI1MjhkOWQ5NGZkY2NkYjdjNjNlMTdkODEzMjM2MTE0YTUwNWQxMGQ2MDc5ZjU4In0%3D",
         "domain": "www.orangecarrier.com",
         "hostOnly": True,
         "path": "/",
@@ -45,7 +45,7 @@ COOKIE_JSON = [
         "session": False,
         "firstPartyDomain": "",
         "partitionKey": None,
-        "expirationDate": 1786827863.322,
+        "expirationDate": 1786830583.955,
         "storeId": None
     },
     {
@@ -110,7 +110,7 @@ COOKIE_JSON = [
     },
     {
         "name": "XSRF-TOKEN",
-        "value": "eyJpdiI6Im5lMkZhb1ZJR2crREtaRlh4VDdyNlE9PSIsInZhbHVlIjoiOTlld0hlZzNIR0ZrSTJBUGxIcElsK0hEcTIxSnN5R1VaOG5lWTMrVXRlWjQxNStHVW1vRWhrUDFYTXBWUGZGUHQzYXpNb0h5bXZzSFphdDVpWk41OGZwT2dZR21MSnZxMzZPQWJEbktYNmVkUHorblZ3dHlyUURpRWRWd3lMN1giLCJtYWMiOiI5NDAwNDk5NDZkOGZmMTg1YzA4ZGEwMTgyYjI5OTBkYzc2OGE3MjlmMTM1NGYwOTBmZjk5N2ZiYjgwMmY5MzhlIn0%3D",
+        "value": "eyJpdiI6ImxjeVVMM21KM1ZnS2wwc0Z6c0daVWc9PSIsInZhbHVlIjoiVk9qUVVzdmFZQlVNaFp1M0lyZjMrMzZ2RDhvalhPSHJTZWx0ZEJhZVJtWGcxT1krUlR4YVA3bmpZdXhnXC9uZzR6bWFzR1BkeWVveUs3TUlWY1NFaWhqM2dwXC9wVEI3dCtkenFHVjN4V0hOSFQxeFRaVGFsbW9yNnI4QkkwUk0wcSIsIm1hYyI6IjMyOGM4ZmUwNWU1YzBlNjQ0MzA2N2FjMTY3M2ViYTk5Y2IyYTE1N2IyOGRjYmQ3MTk0YjdmMzdkNWRmZjNlOGUifQ%3D%3D",
         "domain": "www.orangecarrier.com",
         "hostOnly": True,
         "path": "/",
@@ -120,7 +120,7 @@ COOKIE_JSON = [
         "session": False,
         "firstPartyDomain": "",
         "partitionKey": None,
-        "expirationDate": 1786827863.322,
+        "expirationDate": 1786830583.955,
         "storeId": None
     }
 ]
@@ -236,7 +236,6 @@ async def send_startup_notification():
 async def main():
     print("🚀 Active Calls Monitor Bot started successfully...")
     
-    # কোড চালু হওয়ার সাথে সাথেই কুকি চেক করবে
     test_cookie_validity()
     
     await send_startup_notification()
