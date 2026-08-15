@@ -30,77 +30,15 @@ CHAT_ID = "-1003178872820"
 PANEL_LOGIN_URL = "https://www.orangecarrier.com/login"
 PANEL_CALLS_URL = "https://www.orangecarrier.com/live/calls"
 
-USERNAME = "Shorfuddin904@gmail.com"
-PASSWORD = "3526167852"
+USERNAME = "gmaixcom116@gmail.com"
+PASSWORD = "Riad+@19"
 
 bot = Bot(token=BOT_TOKEN)
 seen_call_ids = set()
 
 COUNTRY_DATA = {
-    "93": {"flag": "🇦🇫", "code": "#AF"}, "358": {"flag": "🇦🇽", "code": "#AX"}, "355": {"flag": "🇦🇱", "code": "#AL"},
-    "213": {"flag": "🇩🇿", "code": "#DZ"}, "1684": {"flag": "🇦🇸", "code": "#AS"}, "376": {"flag": "🇦🇩", "code": "#AD"},
-    "244": {"flag": "🇦🇴", "code": "#AO"}, "1264": {"flag": "🇦🇮", "code": "#AI"}, "672": {"flag": "🇦🇶", "code": "#AQ"},
-    "1268": {"flag": "🇦🇬", "code": "#AG"}, "54": {"flag": "🇦🇷", "code": "#AR"}, "374": {"flag": "🇦🇲", "code": "#AM"},
-    "297": {"flag": "🇦🇼", "code": "#AW"}, "61": {"flag": "🇦🇺", "code": "#AU"}, "43": {"flag": "🇦🇹", "code": "#AT"},
-    "994": {"flag": "🇦🇿", "code": "#AZ"}, "1242": {"flag": "🇧🇸", "code": "#BS"}, "973": {"flag": "🇧🇭", "code": "#BH"},
-    "880": {"flag": "🇧🇩", "code": "#BD"}, "1246": {"flag": "🇧🇧", "code": "#BB"}, "375": {"flag": "🇧🇾", "code": "#BY"},
-    "32": {"flag": "🇧🇪", "code": "#BE"}, "501": {"flag": "🇧🇿", "code": "#BZ"}, "229": {"flag": "🇧🇯", "code": "#BJ"},
-    "1441": {"flag": "🇧🇲", "code": "#BM"}, "975": {"flag": "🇧🇹", "code": "#BT"}, "591": {"flag": "🇧🇴", "code": "#BO"},
-    "387": {"flag": "🇧🇦", "code": "#BA"}, "267": {"flag": "🇧🇼", "code": "#BW"}, "55": {"flag": "🇧🇷", "code": "#BR"},
-    "246": {"flag": "🇮🇴", "code": "#IO"}, "673": {"flag": "🇧🇳", "code": "#BN"}, "359": {"flag": "🇧🇬", "code": "#BG"},
-    "226": {"flag": "🇧🇫", "code": "#BF"}, "257": {"flag": "🇧🇮", "code": "#BI"}, "855": {"flag": "🇰🇭", "code": "#KH"},
-    "237": {"flag": "🇨🇲", "code": "#CM"}, "1": {"flag": "🇺🇸", "code": "#US/CA"}, "238": {"flag": "🇨🇻", "code": "#CV"},
-    "345": {"flag": "🇰🇾", "code": "#KY"}, "236": {"flag": "🇨🇫", "code": "#CF"}, "235": {"flag": "🇹🇩", "code": "#TD"},
-    "56": {"flag": "🇨🇱", "code": "#CL"}, "86": {"flag": "🇨🇳", "code": "#CN"}, "61": {"flag": "🇨🇽", "code": "#CX"},
-    "57": {"flag": "🇨🇴", "code": "#CO"}, "269": {"flag": "🇰🇲", "code": "#KM"}, "242": {"flag": "🇨🇬", "code": "#CG"},
-    "243": {"flag": "🇨🇩", "code": "#CD"}, "682": {"flag": "🇨🇰", "code": "#CK"}, "506": {"flag": "🇨🇷", "code": "#CR"},
-    "225": {"flag": "🇨🇮", "code": "#CI"}, "385": {"flag": "🇭🇷", "code": "#HR"}, "53": {"flag": "🇨🇺", "code": "#CU"},
-    "357": {"flag": "🇨🇾", "code": "#CY"}, "420": {"flag": "🇨🇿", "code": "#CZ"}, "45": {"flag": "🇩🇰", "code": "#DK"},
-    "253": {"flag": "🇩🇯", "code": "#DJ"}, "1767": {"flag": "🇩🇲", "code": "#DM"}, "1809": {"flag": "🇩🇴", "code": "#DO"},
-    "593": {"flag": "🇪🇨", "code": "#EC"}, "20": {"flag": "🇪🇬", "code": "#EG"}, "503": {"flag": "🇸🇻", "code": "#SV"},
-    "240": {"flag": "🇬🇶", "code": "#GQ"}, "291": {"flag": "🇪🇷", "code": "#ER"}, "372": {"flag": "🇪🇪", "code": "#EE"},
-    "251": {"flag": "🇪🇹", "code": "#ET"}, "500": {"flag": "🇫🇰", "code": "#FK"}, "298": {"flag": "🇫🇴", "code": "#FO"},
-    "679": {"flag": "🇫🇯", "code": "#FJ"}, "358": {"flag": "🇫🇮", "code": "#FI"}, "33": {"flag": "🇫🇷", "code": "#FR"},
-    "594": {"flag": "🇬🇫", "code": "#GF"}, "689": {"flag": "🇵🇫", "code": "#PF"}, "241": {"flag": "🇬🇦", "code": "#GA"},
-    "220": {"flag": "🇬🇲", "code": "#GM"}, "995": {"flag": "🇬🇪", "code": "#GE"}, "49": {"flag": "🇩🇪", "code": "#DE"},
-    "233": {"flag": "🇬🇭", "code": "#GH"}, "350": {"flag": "🇬🇮", "code": "#GI"}, "30": {"flag": "🇬🇷", "code": "#GR"},
-    "299": {"flag": "🇬🇱", "code": "#GL"}, "1473": {"flag": "🇬🇩", "code": "#GD"}, "590": {"flag": "🇬🇵", "code": "#GP"},
-    "1671": {"flag": "🇬🇺", "code": "#GU"}, "502": {"flag": "🇬🇹", "code": "#GT"}, "44": {"flag": "🇬🇧", "code": "#UK"},
-    "224": {"flag": "🇬🇳", "code": "#GN"}, "245": {"flag": "🇬🇼", "code": "#GW"}, "592": {"flag": "🇬🇾", "code": "#GY"},
-    "509": {"flag": "🇭🇹", "code": "#HT"}, "504": {"flag": "🇭🇳", "code": "#HN"}, "852": {"flag": "🇭🇰", "code": "#HK"},
-    "36": {"flag": "🇭🇺", "code": "#HU"}, "354": {"flag": "🇮🇸", "code": "#IS"}, "91": {"flag": "🇮🇳", "code": "#IN"},
-    "62": {"flag": "🇮🇩", "code": "#ID"}, "98": {"flag": "🇮🇷", "code": "#IR"}, "964": {"flag": "🇮🇶", "code": "#IQ"},
-    "353": {"flag": "🇮🇪", "code": "#IE"}, "972": {"flag": "🇮🇱", "code": "#IL"}, "39": {"flag": "🇮🇹", "code": "#IT"},
-    "1876": {"flag": "🇯🇲", "code": "#JM"}, "81": {"flag": "🇯🇵", "code": "#JP"}, "962": {"flag": "🇯🇴", "code": "#JO"},
-    "7": {"flag": "🇰🇿", "code": "#KZ"}, "254": {"flag": "🇰🇪", "code": "#KE"}, "686": {"flag": "🇰🇮", "code": "#KI"},
-    "850": {"flag": "🇰🇵", "code": "#KP"}, "82": {"flag": "🇰🇷", "code": "#KR"}, "965": {"flag": "🇰🇼", "code": "#KW"},
-    "996": {"flag": "🇰🇬", "code": "#KG"}, "856": {"flag": "🇱🇦", "code": "#LA"}, "371": {"flag": "🇱🇻", "code": "#LV"},
-    "961": {"flag": "🇱🇧", "code": "#LB"}, "266": {"flag": "🇱🇸", "code": "#LS"}, "231": {"flag": "🇱🇷", "code": "#LR"},
-    "218": {"flag": "🇱🇾", "code": "#LY"}, "423": {"flag": "🇱🇮", "code": "#LI"}, "370": {"flag": "🇱🇹", "code": "#LT"},
-    "352": {"flag": "🇱🇺", "code": "#LU"}, "853": {"flag": "🇲🇴", "code": "#MO"}, "389": {"flag": "🇲🇰", "code": "#MK"},
-    "261": {"flag": "🇲🇬", "code": "#MG"}, "265": {"flag": "🇲🇼", "code": "#MW"}, "60": {"flag": "🇲🇾", "code": "#MY"},
-    "960": {"flag": "🇲🇻", "code": "#MV"}, "223": {"flag": "🇲🇱", "code": "#ML"}, "356": {"flag": "🇲🇹", "code": "#MT"},
-    "692": {"flag": "🇲🇭", "code": "#MH"}, "596": {"flag": "🇲🇶", "code": "#MQ"}, "222": {"flag": "🇲🇷", "code": "#MR"},
-    "230": {"flag": "🇲🇺", "code": "#MU"}, "52": {"flag": "🇲🇽", "code": "#MX"}, "691": {"flag": "🇫🇲", "code": "#FM"},
-    "373": {"flag": "🇲🇩", "code": "#MD"}, "377": {"flag": "🇲🇨", "code": "#MC"}, "976": {"flag": "🇲🇳", "code": "#MN"},
-    "382": {"flag": "🇲🇪", "code": "#ME"}, "212": {"flag": "🇲🇦", "code": "#MA"}, "258": {"flag": "🇲🇿", "code": "#MZ"},
-    "95": {"flag": "🇲🇲", "code": "#MM"}, "264": {"flag": "🇳🇦", "code": "#NA"}, "674": {"flag": "🇳🇷", "code": "#NR"},
-    "977": {"flag": "🇳🇵", "code": "#NP"}, "31": {"flag": "🇳🇱", "code": "#NL"}, "64": {"flag": "🇳🇿", "code": "#NZ"},
-    "505": {"flag": "🇳🇮", "code": "#NI"}, "227": {"flag": "🇳🇪", "code": "#NE"}, "234": {"flag": "🇳🇬", "code": "#NG"},
-    "47": {"flag": "🇳🇴", "code": "#NO"}, "968": {"flag": "🇴🇲", "code": "#OM"}, "92": {"flag": "🇵🇰", "code": "#PK"},
-    "970": {"flag": "🇵🇸", "code": "#PS"}, "507": {"flag": "🇵🇦", "code": "#PA"}, "675": {"flag": "🇵🇬", "code": "#PG"},
-    "595": {"flag": "🇵🇾", "code": "#PY"}, "51": {"flag": "🇵🇪", "code": "#PE"}, "63": {"flag": "🇵🇭", "code": "#PH"},
-    "48": {"flag": "🇵🇱", "code": "#PL"}, "351": {"flag": "🇵🇹", "code": "#PT"}, "974": {"flag": "🇶🇦", "code": "#QA"},
-    "40": {"flag": "🇷🇴", "code": "#RO"}, "7": {"flag": "🇷🇺", "code": "#RU"}, "250": {"flag": "🇷🇼", "code": "#RW"},
-    "966": {"flag": "🇸🇦", "code": "#SA"}, "221": {"flag": "🇸🇳", "code": "#SN"}, "381": {"flag": "🇷🇸", "code": "#RS"},
-    "65": {"flag": "🇸🇬", "code": "#SG"}, "421": {"flag": "🇸🇰", "code": "#SK"}, "386": {"flag": "🇸🇮", "code": "#SI"},
-    "27": {"flag": "🇿🇦", "code": "#ZA"}, "34": {"flag": "🇪🇸", "code": "#ES"}, "94": {"flag": "🇱🇰", "code": "#LK"},
-    "46": {"flag": "🇸🇪", "code": "#SE"}, "41": {"flag": "🇨🇭", "code": "#CH"}, "963": {"flag": "🇸🇾", "code": "#SY"},
-    "886": {"flag": "🇹🇼", "code": "#TW"}, "992": {"flag": "🇹🇯", "code": "#TJ"}, "255": {"flag": "🇹🇿", "code": "#TZ"},
-    "66": {"flag": "🇹🇭", "code": "#TH"}, "216": {"flag": "🇹🇳", "code": "#TN"}, "90": {"flag": "🇹🇷", "code": "#TR"},
-    "380": {"flag": "🇺🇦", "code": "#UA"}, "971": {"flag": "🇦🇪", "code": "#UAE"}, "598": {"flag": "🇺🇾", "code": "#UY"},
-    "998": {"flag": "🇺🇿", "code": "#UZ"}, "58": {"flag": "🇻🇪", "code": "#VE"}, "84": {"flag": "🇻🇳", "code": "#VN"},
-    "967": {"flag": "🇾🇪", "code": "#YE"}, "260": {"flag": "🇿🇲", "code": "#ZM"}, "263": {"flag": "🇿🇼", "code": "#ZW"}
+    "880": {"flag": "🇧🇩", "code": "#BD"}, "91": {"flag": "🇮🇳", "code": "#IN"},
+    "1": {"flag": "🇺🇸", "code": "#US/CA"}, "44": {"flag": "🇬🇧", "code": "#UK"}
 }
 
 def get_country_info(number):
@@ -136,8 +74,10 @@ def login_and_fetch_calls():
         
         response = session.post(PANEL_LOGIN_URL, data=login_data)
         
-        if "login" in response.url or "Invalid" in response.text or response.status_code != 200 and not response.history:
-            print("❌ Login Failed! Email বা Password ভুল আছে অথবা প্যানেল ব্লক করছে।")
+        # বিস্তারিত ডিবাগ চেক
+        if "login" in response.url or "Invalid" in response.text or (response.status_code != 200 and not response.history):
+            print(f"❌ Login Failed! URL: {response.url} | Status Code: {response.status_code}")
+            print("⚠️ ইমেল বা পাসওয়ার্ড ভুল আছে অথবা প্যানেল সিকিউরিটি ব্লক করছে।")
             return []
         
         print("✅ Login Successful! Calls চেক করা হচ্ছে...")
@@ -148,12 +88,11 @@ def login_and_fetch_calls():
         for row in soup.find_all('tr'):
             cols = row.find_all('td')
             if len(cols) >= 5:
-                termination = cols[0].text.strip()
-                did = cols[1].text.strip()
-                cli = cols[2].text.strip()
-                duration = cols[3].text.strip()
+                did = cols[0].text.strip()
+                cli = cols[1].text.strip()
+                duration = cols[2].text.strip()
                 
-                call_id = f"{termination}_{cli}_{duration}"
+                call_id = f"{did}_{cli}_{duration}"
                 
                 audio_link = None
                 audio_tag = row.find('audio') or row.find('a', href=re.compile(r'\.(mp3|wav|ogg)', re.I)) or row.find('a', class_=re.compile(r'play', re.I))
@@ -162,7 +101,6 @@ def login_and_fetch_calls():
 
                 call_list.append({
                     'id': call_id, 
-                    'termination': termination,
                     'did': did,
                     'cli': cli,
                     'duration': duration,
@@ -173,8 +111,25 @@ def login_and_fetch_calls():
         logging.error(f"Error fetching calls: {e}")
     return []
 
+async def send_demo_call():
+    try:
+        demo_caption = (
+            f"🧪 **[DEMO TEST CALL]**\n\n"
+            f"📞 **DID:** `+8801700000000`\n"
+            f"📱 **CLI:** 🇧🇩 `88017*****000`\n"
+            f"⏱️ **Duration:** `15s`\n"
+            f"✨ *Bot connection is active successfully!*"
+        )
+        await bot.send_message(chat_id=CHAT_ID, text=demo_caption, parse_mode="Markdown")
+        print("✅ Demo call notification sent to group successfully!")
+    except Exception as e:
+        print(f"❌ Demo call send failed: {e}")
+
 async def main():
     print("Orange Carrier Audio Bot started successfully...")
+    
+    # বোট চালু হওয়ার সাথে সাথে একটি ডেমো কল গ্রুপে পাঠিয়ে চেক করবে
+    await send_demo_call()
 
     while True:
         try:
@@ -183,7 +138,6 @@ async def main():
                 if call['id'] not in seen_call_ids:
                     seen_call_ids.add(call['id'])
                     
-                    termination = call['termination']
                     did = call['did']
                     cli = call['cli']
                     duration = call['duration']
@@ -194,7 +148,6 @@ async def main():
                     
                     caption = (
                         f"📞 **New Completed Call & Audio!**\n\n"
-                        f"🌍 **Route:** {termination}\n"
                         f"📞 **DID:** `{did}`\n"
                         f"📱 **CLI:** {country['flag']} `{masked_cli}`\n"
                         f"⏱️ **Duration:** `{duration}s`"
