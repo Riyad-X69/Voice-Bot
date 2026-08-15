@@ -58,7 +58,9 @@ def mask_number(number):
 def login_and_fetch_calls():
     session = requests.Session()
     session.headers.update({
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9"
     })
     try:
         login_page = session.get(PANEL_LOGIN_URL)
@@ -73,9 +75,8 @@ def login_and_fetch_calls():
             "password": PASSWORD
         }
         
-        # প্যানেলে পোস্ট রিকোয়েস্ট পাঠানোর পর লগইন হতে কয়েক সেকেন্ড সময় নেওয়ার বিষয়টি এখানে হ্যান্ডেল করা হয়েছে
         response = session.post(PANEL_LOGIN_URL, data=login_data, allow_redirects=True)
-        time.sleep(3) # প্যানেল লোডিং বা ড্যাশবোর্ডে প্রবেশ করার জন্য ছোট ডিলে
+        time.sleep(3)
         
         if "login" in response.url or "Invalid" in response.text or (response.status_code != 200 and not response.history):
             print(f"❌ Login Failed! URL: {response.url} | Status Code: {response.status_code}")
@@ -112,33 +113,18 @@ def login_and_fetch_calls():
         logging.error(f"Error fetching calls: {e}")
     return []
 
-async def send_demo_call():
+async def send_startup_message():
     try:
-        demo_caption = (
-            f"🧪 **[DEMO TEST VOICE CALL]**\n\n"
-            f"📞 **DID:** `+8801700000000`\n"
-            f"📱 **CLI:** 🇧🇩 `88017*****000`\n"
-            f"⏱️ **Duration:** `15s`\n"
-            f"✨ *Bot Voice connection active!*"
-        )
-        # একটি ডেমো স্যাম্পল অডিও লিংক ব্যবহার করা হয়েছে যা ভয়েস হিসেবে যাবে
-        sample_audio = "https://www.signal.org/assets/faq/audio/sample.mp3"
-        
-        await bot.send_voice(
-            chat_id=CHAT_ID, 
-            voice=sample_audio, 
-            caption=demo_caption, 
-            parse_mode="Markdown"
-        )
-        print("✅ Demo voice call notification sent to group successfully!")
+        await bot.send_message(chat_id=CHAT_ID, text="Your bot active now", parse_mode="Markdown")
+        print("✅ 'Your bot active now' message sent to group successfully!")
     except Exception as e:
-        print(f"❌ Demo voice call send failed: {e}")
+        print(f"❌ Startup message send failed: {e}")
 
 async def main():
     print("Orange Carrier Audio Bot started successfully...")
     
-    # বোট চালু হওয়ার সাথে সাথে গ্রুপে ডেমো ভয়েস কল পাঠিয়ে চেক করবে
-    await send_demo_call()
+    # বোট চালু হওয়ার সাথে সাথে গ্রুপে মেসেজ পাঠাবে
+    await send_startup_message()
 
     while True:
         try:
@@ -167,7 +153,6 @@ async def main():
                             if audio_link.startswith('/'):
                                 audio_link = "https://www.orangecarrier.com" + audio_link
                             
-                            # কল ফুল শেষ হয়ে অডিও আসলে গ্রুপে ভয়েস মেসেজ হিসেবে ফরোয়ার্ড করবে
                             await bot.send_voice(
                                 chat_id=CHAT_ID, 
                                 voice=audio_link, 
@@ -179,7 +164,6 @@ async def main():
                             logging.warning(f"Voice send failed, sending text: {ex}")
                             await bot.send_message(chat_id=CHAT_ID, text=caption, parse_mode="Markdown")
                     else:
-                        # যদি কোনো কারণে অডিও লিংক না থাকে তবে শুধু ডিটেইলস পাঠাবে
                         await bot.send_message(chat_id=CHAT_ID, text=caption, parse_mode="Markdown")
                         
         except Exception as e:
