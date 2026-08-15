@@ -28,7 +28,6 @@ threading.Thread(target=run_dummy_server, daemon=True).start()
 BOT_TOKEN = "8564093311:AAE1wtnRDybV4oOH3HgmJbHplsBovYVtZm8"
 CHAT_ID = "-1003178872820"
 
-# সরাসরি রানিং/অ্যাক্টিভ কলের পেজ লিংক
 PANEL_ACTIVE_CALLS_URL = "https://www.orangecarrier.com/live/calls"
 
 # আপনার কুকি ডাটা
@@ -157,13 +156,13 @@ def fetch_active_calls():
     try:
         response = session.get(PANEL_ACTIVE_CALLS_URL)
         if "login" in response.url or response.status_code != 200:
-            print(f"❌ Cookie Login Failed! URL: {response.url}")
+            print(f"❌ Cookie Login Failed! URL: {response.url} | Status: {response.status_code}")
             return []
         
+        print("✅ Cookie Login Successful! প্যানেল থেকে লাইভ কল চেক করা হচ্ছে...")
         soup = BeautifulSoup(response.text, 'html.parser')
         call_list = []
         
-        # Active Calls টেবিল পার্স করা
         for row in soup.find_all('tr'):
             cols = row.find_all('td')
             if len(cols) >= 4:
@@ -171,11 +170,9 @@ def fetch_active_calls():
                 cli = cols[1].text.strip()
                 duration = cols[2].text.strip()
                 
-                # শুধুমাত্র সঠিক ফোন নম্বর ফরম্যাটগুলো পিক করার জন্য
                 if len(did) > 5 and len(cli) > 5:
-                    call_id = f"{did}_{cli}"
+                    call_id = f"{did}_{cli}_{duration}"
                     
-                    # প্লে বাটনের সাথে থাকা কোনো অডিও স্ট্রিম বা রিয়েল-টাইম সোর্স খোঁজা
                     audio_link = None
                     audio_tag = row.find('audio') or row.find('a', href=re.compile(r'(listen|stream|audio|play)', re.I))
                     if audio_tag:
@@ -193,14 +190,24 @@ def fetch_active_calls():
         logging.error(f"Fetch error: {e}")
     return []
 
+async def send_demo_notification():
+    try:
+        demo_text = "✨ **Bot Started Successfully!**\n🔍 *Active Calls Monitor is running & checking panel every 5 seconds...*"
+        await bot.send_message(chat_id=CHAT_ID, text=demo_text, parse_mode="Markdown")
+        print("✅ Startup Demo Notification sent to group successfully!")
+    except Exception as e:
+        print(f"❌ Demo notification failed: {e}")
+
 async def main():
     print("🚀 Active Calls Monitor Bot started successfully...")
     
+    # বোট চালু হওয়ার সাথে সাথে গ্রুপে ডেমো মেসেজ পাঠাবে
+    await send_demo_notification()
+
     while True:
         try:
             active_calls = fetch_active_calls()
             for call in active_calls:
-                # নতুন কোনো লাইভ কল আসলে সাথে সাথে গ্রুপে পাঠিয়ে দেবে
                 if call['id'] not in seen_active_calls:
                     seen_active_calls.add(call['id'])
                     
@@ -227,19 +234,18 @@ async def main():
                         except:
                             await bot.send_message(chat_id=CHAT_ID, text=caption, parse_mode="Markdown")
                     else:
-                        # যদি ডিরেক্ট অডিও লিংক না পাওয়া যায়, তবুও কলের বিস্তারিত গ্রুপে চলে যাবে
                         await bot.send_message(chat_id=CHAT_ID, text=caption, parse_mode="Markdown")
                     
                     print(f"✅ Live call sent to Telegram: {masked_cli}")
             
-            # মেমোরি ফ্রেস রাখার জন্য পুরনো কল আইডি ক্লিয়ার করা (যাতে কিছুক্ষণ পর আবার আসলে ধরতে পারে)
             if len(seen_active_calls) > 50:
                 seen_active_calls.clear()
                 
         except Exception as e:
             logging.error(f"Loop error: {e}")
             
-        await asyncio.sleep(3)
+        # প্রতি ৫ সেকেন্ড পরপর অটো চেক লুপ
+        await asyncio.sleep(5)
 
 if __name__ == "__main__":
     asyncio.run(main())
