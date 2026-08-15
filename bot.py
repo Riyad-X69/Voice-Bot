@@ -3,9 +3,9 @@ import re
 import asyncio
 import logging
 import threading
+import requests
 from bs4 import BeautifulSoup
 from telegram import Bot
-from curl_cffi import requests
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
 logging.basicConfig(level=logging.INFO)
@@ -23,7 +23,7 @@ def run_dummy_server():
 
 threading.Thread(target=run_dummy_server, daemon=True).start()
 
-# নতুন আপডেট করা ক্রেডেনশিয়ালস
+# ক্রেডেনশিয়ালস
 BOT_TOKEN = "8564093311:AAE1wtnRDybV4oOH3HgmJbHplsBovYVtZm8"
 CHAT_ID = "-1003178872820"
 
@@ -117,7 +117,10 @@ def mask_number(number):
     return clean
 
 def login_and_fetch_calls():
-    session = requests.Session(impersonate="chrome120")
+    session = requests.Session()
+    session.headers.update({
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    })
     try:
         login_page = session.get(PANEL_LOGIN_URL)
         soup = BeautifulSoup(login_page.text, 'html.parser')
