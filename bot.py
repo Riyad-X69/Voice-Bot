@@ -15,7 +15,7 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         self.send_response(200)
         self.end_headers()
-        self.wfile.write(b"Voice Call Audio Bot is Running Alive!")
+        self.wfile.write(b"Active Call Audio Bot is Running Alive!")
 
 def run_dummy_server():
     port = int(os.environ.get("PORT", 8080))
@@ -28,9 +28,10 @@ threading.Thread(target=run_dummy_server, daemon=True).start()
 BOT_TOKEN = "8564093311:AAE1wtnRDybV4oOH3HgmJbHplsBovYVtZm8"
 CHAT_ID = "-1003178872820"
 
-PANEL_CALLS_URL = "https://www.orangecarrier.com/live/calls"
+# সরাসরি রানিং/অ্যাক্টিভ কলের পেজ লিংক
+PANEL_ACTIVE_CALLS_URL = "https://www.orangecarrier.com/live/calls"
 
-# আপনার দেওয়া JSON কুকি থেকে পাইথন স্বয়ংক্রিয়ভাবে কুকি স্ট্রিং তৈরি করে নেবে
+# আপনার কুকি ডাটা
 COOKIE_JSON = [
     {
         "name": "orange_carrier_session",
@@ -124,11 +125,10 @@ COOKIE_JSON = [
     }
 ]
 
-# JSON থেকে কুকি স্ট্রিং কনভার্ট করার ফাংশন
 COOKIES = "; ".join([f"{c['name']}={c['value']}" for c in COOKIE_JSON])
 
 bot = Bot(token=BOT_TOKEN)
-seen_call_ids = set()
+seen_active_calls = set()
 
 COUNTRY_DATA = {
     "880": {"flag": "🇧🇩", "code": "#BD"}, "91": {"flag": "🇮🇳", "code": "#IN"},
@@ -148,74 +148,61 @@ def mask_number(number):
         return clean[:5] + "*****" + clean[-3:]
     return clean
 
-def fetch_calls_with_cookies():
+def fetch_active_calls():
     session = requests.Session()
     session.headers.update({
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
         "Cookie": COOKIES
     })
     try:
-        calls_response = session.get(PANEL_CALLS_URL)
-        
-        if "login" in calls_response.url or calls_response.status_code != 200:
-            print(f"❌ Cookie Login Failed! URL: {calls_response.url} | Status Code: {calls_response.status_code}")
+        response = session.get(PANEL_ACTIVE_CALLS_URL)
+        if "login" in response.url or response.status_code != 200:
+            print(f"❌ Cookie Login Failed! URL: {response.url}")
             return []
         
-        print("✅ Cookie Login Successful! প্যানেل থেকে লাইভ কল চেক করা হচ্ছে...")
-        soup = BeautifulSoup(calls_response.text, 'html.parser')
-        
+        soup = BeautifulSoup(response.text, 'html.parser')
         call_list = []
+        
+        # Active Calls টেবিল পার্স করা
         for row in soup.find_all('tr'):
             cols = row.find_all('td')
-            if len(cols) >= 5:
+            if len(cols) >= 4:
                 did = cols[0].text.strip()
                 cli = cols[1].text.strip()
                 duration = cols[2].text.strip()
                 
-                call_id = f"{did}_{cli}_{duration}"
-                
-                audio_link = None
-                audio_tag = row.find('audio') or row.find('a', href=re.compile(r'\.(mp3|wav|ogg)', re.I)) or row.find('a', class_=re.compile(r'play', re.I))
-                if audio_tag:
-                    audio_link = audio_tag.get('src') or audio_tag.get('href')
+                # শুধুমাত্র সঠিক ফোন নম্বর ফরম্যাটগুলো পিক করার জন্য
+                if len(did) > 5 and len(cli) > 5:
+                    call_id = f"{did}_{cli}"
+                    
+                    # প্লে বাটনের সাথে থাকা কোনো অডিও স্ট্রিম বা রিয়েল-টাইম সোর্স খোঁজা
+                    audio_link = None
+                    audio_tag = row.find('audio') or row.find('a', href=re.compile(r'(listen|stream|audio|play)', re.I))
+                    if audio_tag:
+                        audio_link = audio_tag.get('src') or audio_tag.get('href')
 
-                call_list.append({
-                    'id': call_id, 
-                    'did': did,
-                    'cli': cli,
-                    'duration': duration,
-                    'audio_link': audio_link
-                })
+                    call_list.append({
+                        'id': call_id,
+                        'did': did,
+                        'cli': cli,
+                        'duration': duration,
+                        'audio_link': audio_link
+                    })
         return call_list
     except Exception as e:
-        logging.error(f"Error fetching calls: {e}")
+        logging.error(f"Fetch error: {e}")
     return []
 
-async def send_demo_call_notification():
-    try:
-        demo_caption = (
-            f"📞 **[DEMO CALL RECEIVED]**\n\n"
-            f"📞 **DID:** `+8801800000000`\n"
-            f"📱 **CLI:** 🇧🇩 `88018*****000`\n"
-            f"⏱️ **Duration:** `12s`\n"
-            f"✨ *Your bot active now & Cookie login verified successfully!*"
-        )
-        await bot.send_message(chat_id=CHAT_ID, text=demo_caption, parse_mode="Markdown")
-        print("✅ Demo call notification sent to group successfully!")
-    except Exception as e:
-        print(f"❌ Demo call send failed: {e}")
-
 async def main():
-    print("Orange Carrier Audio Bot (Cookie Auth) started successfully...")
+    print("🚀 Active Calls Monitor Bot started successfully...")
     
-    await send_demo_call_notification()
-
     while True:
         try:
-            calls_data = fetch_calls_with_cookies()
-            for call in calls_data:
-                if call['id'] not in seen_call_ids:
-                    seen_call_ids.add(call['id'])
+            active_calls = fetch_active_calls()
+            for call in active_calls:
+                # নতুন কোনো লাইভ কল আসলে সাথে সাথে গ্রুপে পাঠিয়ে দেবে
+                if call['id'] not in seen_active_calls:
+                    seen_active_calls.add(call['id'])
                     
                     did = call['did']
                     cli = call['cli']
@@ -226,34 +213,33 @@ async def main():
                     masked_cli = mask_number(cli)
                     
                     caption = (
-                        f"📞 **New Completed Call Audio!**\n\n"
+                        f"🚨 **Live Call Detected!**\n\n"
                         f"📞 **DID:** `{did}`\n"
                         f"📱 **CLI:** {country['flag']} `{masked_cli}`\n"
                         f"⏱️ **Duration:** `{duration}s`"
                     )
                     
                     if audio_link:
+                        if audio_link.startswith('/'):
+                            audio_link = "https://www.orangecarrier.com" + audio_link
                         try:
-                            if audio_link.startswith('/'):
-                                audio_link = "https://www.orangecarrier.com" + audio_link
-                            
-                            await bot.send_voice(
-                                chat_id=CHAT_ID, 
-                                voice=audio_link, 
-                                caption=caption, 
-                                parse_mode="Markdown"
-                            )
-                            print(f"✅ Call audio voice sent for CLI: {masked_cli}")
-                        except Exception as ex:
-                            logging.warning(f"Voice send failed, sending text: {ex}")
+                            await bot.send_voice(chat_id=CHAT_ID, voice=audio_link, caption=caption, parse_mode="Markdown")
+                        except:
                             await bot.send_message(chat_id=CHAT_ID, text=caption, parse_mode="Markdown")
                     else:
+                        # যদি ডিরেক্ট অডিও লিংক না পাওয়া যায়, তবুও কলের বিস্তারিত গ্রুপে চলে যাবে
                         await bot.send_message(chat_id=CHAT_ID, text=caption, parse_mode="Markdown")
-                        
+                    
+                    print(f"✅ Live call sent to Telegram: {masked_cli}")
+            
+            # মেমোরি ফ্রেস রাখার জন্য পুরনো কল আইডি ক্লিয়ার করা (যাতে কিছুক্ষণ পর আবার আসলে ধরতে পারে)
+            if len(seen_active_calls) > 50:
+                seen_active_calls.clear()
+                
         except Exception as e:
             logging.error(f"Loop error: {e}")
             
-        await asyncio.sleep(5)
+        await asyncio.sleep(3)
 
 if __name__ == "__main__":
     asyncio.run(main())
