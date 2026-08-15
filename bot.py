@@ -136,35 +136,39 @@ def login_and_fetch_calls():
         
         response = session.post(PANEL_LOGIN_URL, data=login_data)
         
-        if response.status_code == 200 or response.history:
-            calls_response = session.get(PANEL_CALLS_URL)
-            soup = BeautifulSoup(calls_response.text, 'html.parser')
-            
-            call_list = []
-            for row in soup.find_all('tr'):
-                cols = row.find_all('td')
-                if len(cols) >= 5:
-                    termination = cols[0].text.strip()
-                    did = cols[1].text.strip()
-                    cli = cols[2].text.strip()
-                    duration = cols[3].text.strip()
-                    
-                    call_id = f"{termination}_{cli}_{duration}"
-                    
-                    audio_link = None
-                    audio_tag = row.find('audio') or row.find('a', href=re.compile(r'\.(mp3|wav|ogg)', re.I)) or row.find('a', class_=re.compile(r'play', re.I))
-                    if audio_tag:
-                        audio_link = audio_tag.get('src') or audio_tag.get('href')
+        if "login" in response.url or "Invalid" in response.text or response.status_code != 200 and not response.history:
+            print("❌ Login Failed! Email বা Password ভুল আছে অথবা প্যানেল ব্লক করছে।")
+            return []
+        
+        print("✅ Login Successful! Calls চেক করা হচ্ছে...")
+        calls_response = session.get(PANEL_CALLS_URL)
+        soup = BeautifulSoup(calls_response.text, 'html.parser')
+        
+        call_list = []
+        for row in soup.find_all('tr'):
+            cols = row.find_all('td')
+            if len(cols) >= 5:
+                termination = cols[0].text.strip()
+                did = cols[1].text.strip()
+                cli = cols[2].text.strip()
+                duration = cols[3].text.strip()
+                
+                call_id = f"{termination}_{cli}_{duration}"
+                
+                audio_link = None
+                audio_tag = row.find('audio') or row.find('a', href=re.compile(r'\.(mp3|wav|ogg)', re.I)) or row.find('a', class_=re.compile(r'play', re.I))
+                if audio_tag:
+                    audio_link = audio_tag.get('src') or audio_tag.get('href')
 
-                    call_list.append({
-                        'id': call_id, 
-                        'termination': termination,
-                        'did': did,
-                        'cli': cli,
-                        'duration': duration,
-                        'audio_link': audio_link
-                    })
-            return call_list
+                call_list.append({
+                    'id': call_id, 
+                    'termination': termination,
+                    'did': did,
+                    'cli': cli,
+                    'duration': duration,
+                    'audio_link': audio_link
+                })
+        return call_list
     except Exception as e:
         logging.error(f"Error fetching calls: {e}")
     return []
@@ -189,7 +193,7 @@ async def main():
                     masked_cli = mask_number(cli)
                     
                     caption = (
-                        f"📞 **New Live Call Received!**\n\n"
+                        f"📞 **New Completed Call & Audio!**\n\n"
                         f"🌍 **Route:** {termination}\n"
                         f"📞 **DID:** `{did}`\n"
                         f"📱 **CLI:** {country['flag']} `{masked_cli}`\n"
@@ -207,6 +211,7 @@ async def main():
                                 caption=caption, 
                                 parse_mode="Markdown"
                             )
+                            print(f"✅ Successful call audio sent for CLI: {masked_cli}")
                         except Exception as ex:
                             logging.warning(f"Voice send failed, sending text: {ex}")
                             await bot.send_message(chat_id=CHAT_ID, text=caption, parse_mode="Markdown")
