@@ -201,7 +201,7 @@ async def main():
                             await bot.send_voice(
                                 chat_id=CHAT_ID, 
                                 voice=audio_link, 
-,                                caption=caption, 
+                                caption=caption, 
                                 parse_mode="Markdown"
                             )
                         except Exception as ex:
