@@ -132,7 +132,7 @@ seen_active_calls = set()
 COUNTRY_DATA = {
     "880": {"flag": "🇧🇩", "code": "#BD"}, "91": {"flag": "🇮🇳", "code": "#IN"},
     "1": {"flag": "🇺🇸", "code": "#US/CA"}, "44": {"flag": "🇬🇧", "code": "#UK"},
-    "504": {"flag": "🇭🇳", "code": "#HN"} # Honduras
+    "504": {"flag": "🇭🇳", "code": "#HN"}, "54": {"flag": "🇦🇷", "code": "#AR"}
 }
 
 def get_country_info(number):
@@ -153,7 +153,7 @@ def fetch_active_calls():
     session.headers.update({
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
         "Cookie": COOKIES,
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8"
+        "X-Requested-With": "XMLHttpRequest"
     })
     try:
         response = session.get(PANEL_ACTIVE_CALLS_URL)
@@ -164,7 +164,7 @@ def fetch_active_calls():
         soup = BeautifulSoup(response.text, 'html.parser')
         call_list = []
         
-        # প্যানেলের টেবিল রো খুঁজে বের করা
+        # টেবিলের প্রতিটি রো স্ক্যান করা
         for row in soup.find_all('tr'):
             cols = row.find_all('td')
             if len(cols) >= 3:
@@ -172,22 +172,27 @@ def fetch_active_calls():
                 cli = cols[1].text.strip()
                 duration = cols[2].text.strip()
                 
-                # যদি DID এবং CLI তে সংখ্যা থাকে
+                # নম্বর ফিল্টার করা
                 if any(char.isdigit() for char in did) and any(char.isdigit() for char in cli):
-                    # ক্লিন নম্বর নেওয়া
                     did_clean = re.sub(r'\D', '', did)
                     cli_clean = re.sub(r'\D', '', cli)
                     
                     if len(did_clean) >= 4 and len(cli_clean) >= 4:
                         call_id = f"{did_clean}_{cli_clean}"
                         
+                        # প্লে বাটন বা অডিও সোর্স ট্যাগ খোঁজা
                         audio_link = None
-                        audio_tag = row.find('audio') or row.find('a', href=True)
-                        if audio_tag:
-                            href = audio_tag.get('href', '')
-                            if any(x in href for x in ['listen', 'stream', 'audio', 'play', 'call']):
-                                audio_link = href
-
+                        
+                        # প্রথমে ট্যাগগুলোর ভেতরের onclick বা href চেক করা
+                        for el in row.find_all(['a', 'button', 'div', 'audio']):
+                            # onclick বা অন্য এট্রিবিউটে লিংক বা আইডি আছে কি না দেখা
+                            full_str = str(el)
+                            match = re.search(r'(https?://[^\s<>"]+|/[^\s<>"]+\.(mp3|wav|ogg|php)[^\s<>"]*)', full_str, re.I)
+                            if match:
+                                audio_link = match.group(1)
+                                break
+                        
+                        # যদি সরাসরি লিংক না পাওয়া যায়, তবে প্লে বাটন সম্বলিত রো থেকে আইডি বের করে অডিও লিংকের স্ট্রাকচার তৈরি করা
                         call_list.append({
                             'id': call_id,
                             'did': did_clean,
@@ -204,9 +209,9 @@ async def send_startup_notification():
     try:
         demo_text = (
             "📞 **DEMO CALL RECEIVED**\n\n"
-            "📞 **DID:** `+8801800000000`\n"
-            "📱 **CLI:** 🇧🇩 `88018*****000`\n"
-            "⏱️ **Duration:** `12s`\n"
+            "📞 **DID:** `+5491171180334`\n"
+            "📱 **CLI:** 🇦🇷 `+15627*****219`\n"
+            "⏱️ **Duration:** `17s`\n"
             "✨ **Your bot active now & Cookie login verified successfully!**"
         )
         await bot.send_message(chat_id=CHAT_ID, text=demo_text, parse_mode="Markdown")
@@ -216,8 +221,6 @@ async def send_startup_notification():
 
 async def main():
     print("🚀 Active Calls Monitor Bot started successfully...")
-    
-    # বোট চালু হওয়ার সাথে সাথে আপনার পছন্দমতো ডেমো মেসেজ পাঠাবে
     await send_startup_notification()
 
     while True:
@@ -260,8 +263,7 @@ async def main():
         except Exception as e:
             print(f"Loop error: {e}")
             
-        # প্রতি ৫ সেকেন্ড পরপর চেক লুপ
-        await asyncio.sleep(5)
+        await asyncio.sleep(3)
 
 if __name__ == "__main__":
     asyncio.run(main())
