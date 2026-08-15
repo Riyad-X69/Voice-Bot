@@ -1,5 +1,6 @@
 import os
 import re
+import time
 import asyncio
 import logging
 import threading
@@ -72,15 +73,15 @@ def login_and_fetch_calls():
             "password": PASSWORD
         }
         
-        response = session.post(PANEL_LOGIN_URL, data=login_data)
+        # প্যানেলে পোস্ট রিকোয়েস্ট পাঠানোর পর লগইন হতে কয়েক সেকেন্ড সময় নেওয়ার বিষয়টি এখানে হ্যান্ডেল করা হয়েছে
+        response = session.post(PANEL_LOGIN_URL, data=login_data, allow_redirects=True)
+        time.sleep(3) # প্যানেল লোডিং বা ড্যাশবোর্ডে প্রবেশ করার জন্য ছোট ডিলে
         
-        # বিস্তারিত ডিবাগ চেক
         if "login" in response.url or "Invalid" in response.text or (response.status_code != 200 and not response.history):
             print(f"❌ Login Failed! URL: {response.url} | Status Code: {response.status_code}")
-            print("⚠️ ইমেল বা পাসওয়ার্ড ভুল আছে অথবা প্যানেল সিকিউরিটি ব্লক করছে।")
             return []
         
-        print("✅ Login Successful! Calls চেক করা হচ্ছে...")
+        print("✅ Login Successful! Checking calls...")
         calls_response = session.get(PANEL_CALLS_URL)
         soup = BeautifulSoup(calls_response.text, 'html.parser')
         
@@ -114,21 +115,29 @@ def login_and_fetch_calls():
 async def send_demo_call():
     try:
         demo_caption = (
-            f"🧪 **[DEMO TEST CALL]**\n\n"
+            f"🧪 **[DEMO TEST VOICE CALL]**\n\n"
             f"📞 **DID:** `+8801700000000`\n"
             f"📱 **CLI:** 🇧🇩 `88017*****000`\n"
             f"⏱️ **Duration:** `15s`\n"
-            f"✨ *Bot connection is active successfully!*"
+            f"✨ *Bot Voice connection active!*"
         )
-        await bot.send_message(chat_id=CHAT_ID, text=demo_caption, parse_mode="Markdown")
-        print("✅ Demo call notification sent to group successfully!")
+        # একটি ডেমো স্যাম্পল অডিও লিংক ব্যবহার করা হয়েছে যা ভয়েস হিসেবে যাবে
+        sample_audio = "https://www.signal.org/assets/faq/audio/sample.mp3"
+        
+        await bot.send_voice(
+            chat_id=CHAT_ID, 
+            voice=sample_audio, 
+            caption=demo_caption, 
+            parse_mode="Markdown"
+        )
+        print("✅ Demo voice call notification sent to group successfully!")
     except Exception as e:
-        print(f"❌ Demo call send failed: {e}")
+        print(f"❌ Demo voice call send failed: {e}")
 
 async def main():
     print("Orange Carrier Audio Bot started successfully...")
     
-    # বোট চালু হওয়ার সাথে সাথে একটি ডেমো কল গ্রুপে পাঠিয়ে চেক করবে
+    # বোট চালু হওয়ার সাথে সাথে গ্রুপে ডেমো ভয়েস কল পাঠিয়ে চেক করবে
     await send_demo_call()
 
     while True:
@@ -147,7 +156,7 @@ async def main():
                     masked_cli = mask_number(cli)
                     
                     caption = (
-                        f"📞 **New Completed Call & Audio!**\n\n"
+                        f"📞 **New Completed Call Audio!**\n\n"
                         f"📞 **DID:** `{did}`\n"
                         f"📱 **CLI:** {country['flag']} `{masked_cli}`\n"
                         f"⏱️ **Duration:** `{duration}s`"
@@ -158,17 +167,19 @@ async def main():
                             if audio_link.startswith('/'):
                                 audio_link = "https://www.orangecarrier.com" + audio_link
                             
+                            # কল ফুল শেষ হয়ে অডিও আসলে গ্রুপে ভয়েস মেসেজ হিসেবে ফরোয়ার্ড করবে
                             await bot.send_voice(
                                 chat_id=CHAT_ID, 
                                 voice=audio_link, 
                                 caption=caption, 
                                 parse_mode="Markdown"
                             )
-                            print(f"✅ Successful call audio sent for CLI: {masked_cli}")
+                            print(f"✅ Call audio voice sent for CLI: {masked_cli}")
                         except Exception as ex:
                             logging.warning(f"Voice send failed, sending text: {ex}")
                             await bot.send_message(chat_id=CHAT_ID, text=caption, parse_mode="Markdown")
                     else:
+                        # যদি কোনো কারণে অডিও লিংক না থাকে তবে শুধু ডিটেইলস পাঠাবে
                         await bot.send_message(chat_id=CHAT_ID, text=caption, parse_mode="Markdown")
                         
         except Exception as e:
