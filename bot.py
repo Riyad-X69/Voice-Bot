@@ -1,6 +1,5 @@
 import os
 import re
-import json
 import asyncio
 import logging
 import threading
@@ -24,108 +23,10 @@ def run_dummy_server():
 
 threading.Thread(target=run_dummy_server, daemon=True).start()
 
-# ক্রেডেনশিয়ালস
 BOT_TOKEN = "8564093311:AAE1wtnRDybV4oOH3HgmJbHplsBovYVtZm8"
 CHAT_ID = "-1003178872820"
 
 PANEL_ACTIVE_CALLS_URL = "https://www.orangecarrier.com/live/calls"
-DASHBOARD_URL = "https://www.orangecarrier.com/dashboard"
-
-# আপনার নতুন কুকি ডাটা
-COOKIE_JSON = [
-    {
-        "name": "orange_carrier_session",
-        "value": "eyJpdiI6IlwvalU1UU1GbTVMM0FxK0g0dk1QR2pBPT0iLCJ2YWx1ZSI6InZpR0RJZFZBNmdxUGdZQlhsN0FBTUZGVFNMM0ZYVE1wUkhSNEhxQWJVVUdkbUpSMlcwRUxQU2xISlNyS0lCQVQ3UmVla0FVOStKQVNiZ2JqTjVhdlVcLzFTXC8rWXh2Y2hTRGNOR3VCVUdjZ3YxcVB2dGJ3WWNpcjZBZXQ3S1ZUTHQiLCJtYWMiOiJhNzQ5M2U4MTUwOWMwMTA1MWI1MjhkOWQ5NGZkY2NkYjdjNjNlMTdkODEzMjM2MTE0YTUwNWQxMGQ2MDc5ZjU4In0%3D",
-        "domain": "www.orangecarrier.com",
-        "hostOnly": True,
-        "path": "/",
-        "secure": False,
-        "httpOnly": True,
-        "sameSite": None,
-        "session": False,
-        "firstPartyDomain": "",
-        "partitionKey": None,
-        "expirationDate": 1786830583.955,
-        "storeId": None
-    },
-    {
-        "name": "_gat_gtag_UA_191466370_1",
-        "value": "1",
-        "domain": ".orangecarrier.com",
-        "hostOnly": False,
-        "path": "/",
-        "secure": False,
-        "httpOnly": False,
-        "sameSite": None,
-        "session": False,
-        "firstPartyDomain": "",
-        "partitionKey": None,
-        "expirationDate": 1786820200,
-        "storeId": None
-    },
-    {
-        "name": "_fbp",
-        "value": "fb.1.1786811898314.919633458798933041",
-        "domain": ".orangecarrier.com",
-        "hostOnly": False,
-        "path": "/",
-        "secure": False,
-        "httpOnly": False,
-        "sameSite": None,
-        "session": False,
-        "firstPartyDomain": "",
-        "partitionKey": None,
-        "expirationDate": 1794596162,
-        "storeId": None
-    },
-    {
-        "name": "_ga",
-        "value": "GA1.2.1783611367.1786811898",
-        "domain": ".orangecarrier.com",
-        "hostOnly": False,
-        "path": "/",
-        "secure": False,
-        "httpOnly": False,
-        "sameSite": None,
-        "session": False,
-        "firstPartyDomain": "",
-        "partitionKey": None,
-        "expirationDate": 1821380153.487,
-        "storeId": None
-    },
-    {
-        "name": "_gid",
-        "value": "GA1.2.360386769.1786811898",
-        "domain": ".orangecarrier.com",
-        "hostOnly": False,
-        "path": "/",
-        "secure": False,
-        "httpOnly": False,
-        "sameSite": None,
-        "session": False,
-        "firstPartyDomain": "",
-        "partitionKey": None,
-        "expirationDate": 1786906553,
-        "storeId": None
-    },
-    {
-        "name": "XSRF-TOKEN",
-        "value": "eyJpdiI6ImxjeVVMM21KM1ZnS2wwc0Z6c0daVWc9PSIsInZhbHVlIjoiVk9qUVVzdmFZQlVNaFp1M0lyZjMrMzZ2RDhvalhPSHJTZWx0ZEJhZVJtWGcxT1krUlR4YVA3bmpZdXhnXC9uZzR6bWFzR1BkeWVveUs3TUlWY1NFaWhqM2dwXC9wVEI3dCtkenFHVjN4V0hOSFQxeFRaVGFsbW9yNnI4QkkwUk0wcSIsIm1hYyI6IjMyOGM4ZmUwNWU1YzBlNjQ0MzA2N2FjMTY3M2ViYTk5Y2IyYTE1N2IyOGRjYmQ3MTk0YjdmMzdkNWRmZjNlOGUifQ%3D%3D",
-        "domain": "www.orangecarrier.com",
-        "hostOnly": True,
-        "path": "/",
-        "secure": False,
-        "httpOnly": False,
-        "sameSite": None,
-        "session": False,
-        "firstPartyDomain": "",
-        "partitionKey": None,
-        "expirationDate": 1786830583.955,
-        "storeId": None
-    }
-]
-
-COOKIES = "; ".join([f"{c['name']}={c['value']}" for c in COOKIE_JSON])
 
 bot = Bot(token=BOT_TOKEN)
 seen_active_calls = set()
@@ -149,36 +50,16 @@ def mask_number(number):
         return clean[:5] + "*****" + clean[-3:]
     return clean
 
-def test_cookie_validity():
-    session = requests.Session()
-    session.headers.update({
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
-        "Cookie": COOKIES
-    })
-    try:
-        response = session.get(DASHBOARD_URL, allow_redirects=True)
-        print(f"🔍 Cookie Test URL Response: {response.url} (Status: {response.status_code})")
-        if "login" in response.url or response.status_code != 200:
-            print("❌ COOKIE STATUS: INVALID or EXPIRED! (Redirected to login page)")
-            return False
-        else:
-            print("✅ COOKIE STATUS: ACTIVE & VALID! Successfully logged into Panel.")
-            return True
-    except Exception as e:
-        print(f"⚠️ Cookie check error: {e}")
-        return False
-
 def fetch_active_calls():
     session = requests.Session()
     session.headers.update({
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
-        "Cookie": COOKIES,
+        "User-Agent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Mobile Safari/537.36",
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8"
     })
     try:
         response = session.get(PANEL_ACTIVE_CALLS_URL)
-        if "login" in response.url or response.status_code != 200:
-            print("❌ Session expired! Please update cookies.")
+        if response.status_code != 200:
+            print(f"⚠️ Panel response status: {response.status_code}")
             return []
         
         soup = BeautifulSoup(response.text, 'html.parser')
@@ -226,7 +107,7 @@ async def send_startup_notification():
             "📞 **DID:** `+5491171180334`\n"
             "📱 **CLI:** 🇦🇷 `+15627*****219`\n"
             "⏱️ **Duration:** `18s`\n"
-            "✨ **Your bot active now & Cookie login verified successfully!**"
+            "✨ **Bot is running and monitoring calls successfully!**"
         )
         await bot.send_message(chat_id=CHAT_ID, text=demo_text, parse_mode="Markdown")
         print("✅ Startup Demo Notification sent to group successfully!")
@@ -235,12 +116,9 @@ async def send_startup_notification():
 
 async def main():
     print("🚀 Active Calls Monitor Bot started successfully...")
-    
-    test_cookie_validity()
-    
     await send_startup_notification()
 
-    while True:
+    while type(True) == bool:
         try:
             active_calls = fetch_active_calls()
             for call in active_calls:
